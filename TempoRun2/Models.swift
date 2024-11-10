@@ -15,18 +15,20 @@ enum ResultType: String, Codable {
 }
 
 /// Struct for search results, including tracks, artists, and genres
-struct SearchResult: Identifiable, Codable {
+struct SearchResult: Identifiable, Codable, Hashable {
     let id: String
     let name: String
     let type: ResultType
     let artistName: String?
 
-    /// Initialize a search result with optional artist name
-    init(id: String, name: String, type: ResultType, artistName: String? = nil) {
-        self.id = id
-        self.name = name
-        self.type = type
-        self.artistName = artistName
+    // Implement the hash function explicitly (optional)
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+
+    // Implement equality explicitly (optional)
+    static func == (lhs: SearchResult, rhs: SearchResult) -> Bool {
+        return lhs.id == rhs.id
     }
 }
 

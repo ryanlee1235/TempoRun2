@@ -77,6 +77,7 @@ struct ContentView: View {
     @State private var suggestions: [SearchResult] = []
     @State private var showSuggestions = false
     @State private var selectedSearchFilter: SearchFilterType = .all
+    @State private var selectedItems: Set<SearchResult> = []
     @StateObject private var storedList = StoredList()
     private let spotifyAPI = SpotifyAPI()
 
@@ -96,22 +97,20 @@ struct ContentView: View {
                 }
 
                 // Segmented control to filter search recommendations
-                Picker("Search Filter", selection: $selectedSearchFilter) {
-                    ForEach(SearchFilterType.allCases) { filter in
-                        Text(filter.rawValue).tag(filter)
+                if !filteredSuggestions.isEmpty {
+                    Picker("Search Filter", selection: $selectedSearchFilter) {
+                        ForEach(SearchFilterType.allCases) { filter in
+                            Text(filter.rawValue).tag(filter)
+                        }
                     }
+                    .pickerStyle(SegmentedPickerStyle())
+                    .padding()
                 }
-                .pickerStyle(SegmentedPickerStyle())
-                .padding()
 
                 // Display filtered search suggestions
                 if showSuggestions && !filteredSuggestions.isEmpty {
                     List(filteredSuggestions, id: \.id) { suggestion in
-                        Button(action: {
-                            query = suggestion.name
-                            showSuggestions = false
-                            addToFavorites(suggestion)
-                        }) {
+                        HStack {
                             VStack(alignment: .leading) {
                                 Text(suggestion.name)
                                     .font(.headline)
@@ -124,11 +123,29 @@ struct ContentView: View {
                                     .font(.caption)
                                     .foregroundColor(suggestion.type == .track ? .blue : .green)
                             }
+                            Spacer()
+                            // Selection button
+                            Button(action: {
+                                toggleSelection(for: suggestion)
+                            }) {
+                                Image(systemName: selectedItems.contains(suggestion) ? "checkmark.circle.fill" : "circle")
+                                    .foregroundColor(selectedItems.contains(suggestion) ? .green : .gray)
+                            }
                         }
                     }
-                    
-                    .frame(height: 400)
-                    
+                    .frame(height: 200)
+
+                    // Button to add selected items to favorites
+                    Button(action: {
+                        addToFavorites()
+                    }) {
+                        Text("Add to List (\(selectedItems.count) selected)")
+                            .padding()
+                            .background(selectedItems.isEmpty ? Color.gray : Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                            .disabled(selectedItems.isEmpty)
+                    }
                 }
 
                 // Display the list of favorite items
@@ -149,7 +166,7 @@ struct ContentView: View {
                     }
                     .onDelete(perform: deleteFavorite)
                 }
-                .navigationTitle("Favorites")
+                .navigationTitle("Personalization")
             }
             .padding()
             .onAppear {
@@ -162,15 +179,22 @@ struct ContentView: View {
         }
     }
 
-    // Filtered suggestions based on selected search filter
+    // Toggle selection of an item
+    private func toggleSelection(for item: SearchResult) {
+        if selectedItems.contains(item) {
+            selectedItems.remove(item)
+        } else {
+            selectedItems.insert(item)
+        }
+    }
+
+    // Filtered search suggestions based on the selected filter
     private var filteredSuggestions: [SearchResult] {
         switch selectedSearchFilter {
         case .all:
             if let firstArtist = suggestions.first(where: { $0.type == .artist }) {
-                // Combine the first artist with the list of track suggestions
                 return [firstArtist] + suggestions.filter { $0.type == .track }
             } else {
-                // If no artist is found, return only track suggestions
                 return suggestions.filter { $0.type == .track }
             }
         case .track:
@@ -190,13 +214,17 @@ struct ContentView: View {
         spotifyAPI.fetchSearchSuggestions(query: query) { results in
             DispatchQueue.main.async {
                 self.suggestions = results
+                self.selectedItems.removeAll() // Reset selection when new suggestions are fetched
             }
         }
     }
 
-    // Add a selected item to the favorites list
-    private func addToFavorites(_ item: SearchResult) {
-        storedList.addToFavorites(item)
+    // Add selected items to the favorites list
+    private func addToFavorites() {
+        for item in selectedItems {
+            storedList.addToFavorites(item)
+        }
+        selectedItems.removeAll() // Clear selection after adding to favorites
     }
 
     // Delete a favorite item from the list

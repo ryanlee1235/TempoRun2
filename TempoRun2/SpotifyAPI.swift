@@ -28,7 +28,7 @@ class SpotifyAPI {
         let bodyData = "grant_type=client_credentials"
         request.httpBody = bodyData.data(using: .utf8)
 
-        URLSession.shared.dataTask(with: request) { data, response, error in
+        URLSession.shared.dataTask(with: request) { data, _, error in
             guard let data = data, error == nil else {
                 completion(false)
                 return
@@ -48,88 +48,7 @@ class SpotifyAPI {
         }.resume()
     }
 
-    // Function to search for a song
-    func searchSong(query: String, completion: @escaping (String?) -> Void) {
-        guard let accessToken = accessToken else {
-            completion(nil)
-            return
-        }
-
-        let searchURL = "https://api.spotify.com/v1/search?q=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&type=track&limit=1"
-        var request = URLRequest(url: URL(string: searchURL)!)
-        request.httpMethod = "GET"
-        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data, error == nil else {
-                completion(nil)
-                return
-            }
-
-            do {
-                let searchResponse = try JSONDecoder().decode(SearchResponse.self, from: data)
-                completion(searchResponse.tracks?.items.first?.id)
-            } catch {
-                completion(nil)
-            }
-        }.resume()
-    }
-
-    // Function to get BPM of a song
-    func getSongBPM(trackID: String, completion: @escaping (Double?) -> Void) {
-        guard let accessToken = accessToken else {
-            completion(nil)
-            return
-        }
-
-        let audioFeaturesURL = "https://api.spotify.com/v1/audio-features/\(trackID)"
-        var request = URLRequest(url: URL(string: audioFeaturesURL)!)
-        request.httpMethod = "GET"
-        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data, error == nil else {
-                completion(nil)
-                return
-            }
-
-            do {
-                let audioFeatures = try JSONDecoder().decode(AudioFeatures.self, from: data)
-                completion(audioFeatures.tempo)
-            } catch {
-                completion(nil)
-            }
-        }.resume()
-    }
-    
-/*    func fetchSearchSuggestions(query: String, completion: @escaping ([Track]) -> Void) {
-            guard let accessToken = accessToken else {
-                completion([])
-                return
-            }
-
-            let searchURL = "https://api.spotify.com/v1/search?q=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&type=track,artist&limit=5"
-            var request = URLRequest(url: URL(string: searchURL)!)
-            request.httpMethod = "GET"
-            request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-
-            URLSession.shared.dataTask(with: request) { data, response, error in
-                guard let data = data, error == nil else {
-                    completion([])
-                    return
-                }
-
-                do {
-                    let searchResponse = try JSONDecoder().decode(SearchResponse.self, from: data)
-                    let tracks = searchResponse.tracks.items
-                    completion(tracks)
-                } catch {
-                    completion([])
-                }
-            }.resume()
-    }
-}
-*/
+    // Function to fetch search suggestions
     func fetchSearchSuggestions(query: String, completion: @escaping ([SearchResult]) -> Void) {
         guard let accessToken = accessToken else {
             completion([])
@@ -151,18 +70,18 @@ class SpotifyAPI {
                 let searchResponse = try JSONDecoder().decode(SearchResponse.self, from: data)
                 var results: [SearchResult] = []
 
+                // Process artists
+                if let artists = searchResponse.artists?.items {
+                    //for artist in artists {
+                        let result = SearchResult(id: artists[0].id, name: artists[0].name, type: .artist, artistName: nil)
+                        results.append(result)
+                    //}
+                }
+                
                 // Process tracks
                 if let tracks = searchResponse.tracks?.items {
                     for track in tracks {
                         let result = SearchResult(id: track.id, name: track.name, type: .track, artistName: track.artists.first?.name)
-                        results.append(result)
-                    }
-                }
-
-                // Process artists
-                if let artists = searchResponse.artists?.items {
-                    for artist in artists {
-                        let result = SearchResult(id: artist.id, name: artist.name, type: .artist, artistName: nil)
                         results.append(result)
                     }
                 }
@@ -174,4 +93,3 @@ class SpotifyAPI {
         }.resume()
     }
 }
-

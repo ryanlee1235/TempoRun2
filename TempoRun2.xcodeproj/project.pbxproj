@@ -16,6 +16,7 @@
 		2D214FDE2CE080D200C932F3 /* TempoRun2UITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D214FDD2CE080D200C932F3 /* TempoRun2UITestsLaunchTests.swift */; };
 		2D214FEC2CE082EE00C932F3 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D214FEB2CE082EE00C932F3 /* Models.swift */; };
 		2D214FEE2CE0833700C932F3 /* SpotifyAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D214FED2CE0833700C932F3 /* SpotifyAPI.swift */; };
+		2D214FF02CE0BE7F00C932F3 /* StoredList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D214FEF2CE0BE7F00C932F3 /* StoredList.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -50,6 +51,7 @@
 		2D214FEA2CE082B900C932F3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		2D214FEB2CE082EE00C932F3 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		2D214FED2CE0833700C932F3 /* SpotifyAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyAPI.swift; sourceTree = "<group>"; };
+		2D214FEF2CE0BE7F00C932F3 /* StoredList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoredList.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -108,6 +110,7 @@
 				2D214FC62CE080D200C932F3 /* Preview Content */,
 				2D214FEB2CE082EE00C932F3 /* Models.swift */,
 				2D214FED2CE0833700C932F3 /* SpotifyAPI.swift */,
+				2D214FEF2CE0BE7F00C932F3 /* StoredList.swift */,
 			);
 			path = TempoRun2;
 			sourceTree = "<group>";
@@ -267,6 +270,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2D214FF02CE0BE7F00C932F3 /* StoredList.swift in Sources */,
 				2D214FEC2CE082EE00C932F3 /* Models.swift in Sources */,
 				2D214FC22CE080D000C932F3 /* ContentView.swift in Sources */,
 				2D214FC02CE080D000C932F3 /* TempoRun2App.swift in Sources */,

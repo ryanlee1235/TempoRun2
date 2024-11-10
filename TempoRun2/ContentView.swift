@@ -66,62 +66,83 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var query: String = ""
-    @State private var bpm: String = "Enter a song title, artist, or genre"
     @State private var suggestions: [SearchResult] = []
     @State private var showSuggestions = false
+    @StateObject private var storedList = StoredList()
     private let spotifyAPI = SpotifyAPI()
 
     var body: some View {
-        VStack(spacing: 20) {
-            TextField("Search for a song, artist, or genre", text: $query, onEditingChanged: { isEditing in
-                if isEditing {
-                    showSuggestions = true
+        NavigationView {
+            VStack(spacing: 20) {
+                // Search bar for user input
+                TextField("Search for a song or artist", text: $query, onEditingChanged: { isEditing in
+                    if isEditing {
+                        showSuggestions = true
+                    }
+                })
+                .padding()
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .onChange(of: query) { _,newValue in
+                    fetchSuggestions()
                 }
-            })
-            .padding()
-            .textFieldStyle(RoundedBorderTextFieldStyle())
-            .onChange(of: query) { _,newValue in
-                fetchSuggestions()
-            }
 
-            if showSuggestions && !suggestions.isEmpty {
-                List(suggestions, id: \.id) { suggestion in
-                    Button(action: {
-                        query = suggestion.name
-                        showSuggestions = false
-                        handleSelection(suggestion)
-                    }) {
+                // Display search suggestions
+                if showSuggestions && !suggestions.isEmpty {
+                    List(suggestions, id: \.id) { suggestion in
+                        Button(action: {
+                            query = suggestion.name
+                            showSuggestions = false
+                            addToFavorites(suggestion)
+                        }) {
+                            VStack(alignment: .leading) {
+                                Text(suggestion.name)
+                                    .font(.headline)
+                                if let artistName = suggestion.artistName {
+                                    Text(artistName)
+                                        .font(.subheadline)
+                                        .foregroundColor(.gray)
+                                }
+                                Text(suggestion.type.rawValue.capitalized)
+                                    .font(.caption)
+                                    .foregroundColor(suggestion.type == .track ? .blue : .green)
+                            }
+                        }
+                    }
+                    .frame(height: 400)
+                }
+
+                // Display the list of favorite items
+                List {
+                    ForEach(storedList.favorites, id: \.id) { favorite in
                         VStack(alignment: .leading) {
-                            Text(suggestion.name)
+                            Text(favorite.name)
                                 .font(.headline)
-                            if suggestion.type == .track {
-                                Text(suggestion.artistName ?? "")
+                            if let artistName = favorite.artistName {
+                                Text(artistName)
                                     .font(.subheadline)
                                     .foregroundColor(.gray)
                             }
-                            Text(suggestion.type.rawValue.capitalized)
+                            Text(favorite.type.rawValue.capitalized)
                                 .font(.caption)
-                                .foregroundColor(.blue)
+                                .foregroundColor(favorite.type == .track ? .blue : .green)
                         }
                     }
+                    .onDelete(perform: deleteFavorite)
                 }
-                .frame(height: 200)
+                .navigationTitle("Favorites")
             }
-
-            Text(bpm)
-                .padding()
-                .font(.title)
-        }
-        .padding()
-        .onAppear {
-            spotifyAPI.getAccessToken { success in
-                if !success {
-                    bpm = "Failed to get access token"
+            .padding()
+            .onAppear {
+                spotifyAPI.getAccessToken { success in
+                    if !success {
+                        print("Failed to get access token")
+                    }
                 }
             }
         }
     }
 
+    // Fetch search suggestions based on user input
     private func fetchSuggestions() {
         guard !query.isEmpty else {
             suggestions = []
@@ -135,26 +156,16 @@ struct ContentView: View {
         }
     }
 
-    private func handleSelection(_ suggestion: SearchResult) {
-        switch suggestion.type {
-        case .track:
-            fetchBPM(for: suggestion)
-        case .artist:
-            bpm = "Selected artist: \(suggestion.name)"
-        case .genre:
-            bpm = "Selected genre: \(suggestion.name)"
-        }
+    // Add a selected item to the favorites list
+    private func addToFavorites(_ item: SearchResult) {
+        storedList.addToFavorites(item)
     }
 
-    private func fetchBPM(for track: SearchResult) {
-        spotifyAPI.getSongBPM(trackID: track.id) { tempo in
-            DispatchQueue.main.async {
-                if let tempo = tempo {
-                    bpm = "BPM: \(Int(tempo))"
-                } else {
-                    bpm = "Failed to get BPM"
-                }
-            }
+    // Delete a favorite item from the list
+    private func deleteFavorite(at offsets: IndexSet) {
+        offsets.forEach { index in
+            let item = storedList.favorites[index]
+            storedList.removeFromFavorites(item)
         }
     }
 }

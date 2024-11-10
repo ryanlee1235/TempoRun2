@@ -64,10 +64,19 @@ struct ContentView_Previews: PreviewProvider {
 
 import SwiftUI
 
+enum SearchFilterType: String, CaseIterable, Identifiable {
+    case all = "All"
+    case track = "Tracks"
+    case artist = "Artists"
+
+    var id: String { self.rawValue }
+}
+
 struct ContentView: View {
     @State private var query: String = ""
     @State private var suggestions: [SearchResult] = []
     @State private var showSuggestions = false
+    @State private var selectedSearchFilter: SearchFilterType = .all
     @StateObject private var storedList = StoredList()
     private let spotifyAPI = SpotifyAPI()
 
@@ -86,9 +95,18 @@ struct ContentView: View {
                     fetchSuggestions()
                 }
 
-                // Display search suggestions
-                if showSuggestions && !suggestions.isEmpty {
-                    List(suggestions, id: \.id) { suggestion in
+                // Segmented control to filter search recommendations
+                Picker("Search Filter", selection: $selectedSearchFilter) {
+                    ForEach(SearchFilterType.allCases) { filter in
+                        Text(filter.rawValue).tag(filter)
+                    }
+                }
+                .pickerStyle(SegmentedPickerStyle())
+                .padding()
+
+                // Display filtered search suggestions
+                if showSuggestions && !filteredSuggestions.isEmpty {
+                    List(filteredSuggestions, id: \.id) { suggestion in
                         Button(action: {
                             query = suggestion.name
                             showSuggestions = false
@@ -108,7 +126,9 @@ struct ContentView: View {
                             }
                         }
                     }
+                    
                     .frame(height: 400)
+                    
                 }
 
                 // Display the list of favorite items
@@ -139,6 +159,24 @@ struct ContentView: View {
                     }
                 }
             }
+        }
+    }
+
+    // Filtered suggestions based on selected search filter
+    private var filteredSuggestions: [SearchResult] {
+        switch selectedSearchFilter {
+        case .all:
+            if let firstArtist = suggestions.first(where: { $0.type == .artist }) {
+                // Combine the first artist with the list of track suggestions
+                return [firstArtist] + suggestions.filter { $0.type == .track }
+            } else {
+                // If no artist is found, return only track suggestions
+                return suggestions.filter { $0.type == .track }
+            }
+        case .track:
+            return suggestions.filter { $0.type == .track }
+        case .artist:
+            return suggestions.filter { $0.type == .artist }
         }
     }
 

@@ -72,10 +72,10 @@ class SpotifyAPI {
 
                 // Process artists
                 if let artists = searchResponse.artists?.items {
-                    //for artist in artists {
-                        let result = SearchResult(id: artists[0].id, name: artists[0].name, type: .artist, artistName: nil)
+                    for artist in artists {
+                        let result = SearchResult(id: artist.id, name: artist.name, type: .artist, artistName: nil)
                         results.append(result)
-                    //}
+                    }
                 }
                 
                 // Process tracks

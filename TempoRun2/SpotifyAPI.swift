@@ -92,4 +92,27 @@ class SpotifyAPI {
             }
         }.resume()
     }
+    
+    func getSongBPM(trackID: String, completion: @escaping (Double?) -> Void) {
+        guard let accessToken = accessToken else {
+            completion(nil)
+            return
+        }
+        let audioFeaturesURL = "https://api.spotify.com/v1/audio-features/\(trackID)"
+        var request = URLRequest(url: URL(string: audioFeaturesURL)!)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            guard let data = data, error == nil else {
+                completion(nil)
+                return
+            }
+            do {
+                let audioFeatures = try JSONDecoder().decode(AudioFeatures.self, from: data)
+                completion(audioFeatures.tempo)
+            } catch {
+                completion(nil)
+            }
+        }.resume()
+    }
 }

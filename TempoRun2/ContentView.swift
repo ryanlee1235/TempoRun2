@@ -5,63 +5,6 @@
 //  Created by Ryan Lee on 11/9/24.
 //
 
-/*import SwiftUI
-
-struct ContentView: View {
-    @State private var query: String = ""
-    @State private var bpm: String = "Enter a song title or artist"
-    private let spotifyAPI = SpotifyAPI()
- 
-
-    var body: some View {
-        VStack(spacing: 20) {
-            TextField("Search for a song", text: $query)
-                .padding()
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-
-            Button(action: {
-                bpm = "Searching..."
-                spotifyAPI.getAccessToken { success in
-                    guard success else {
-                        bpm = "Failed to get access token"
-                        return
-                    }
-
-                    spotifyAPI.searchSong(query: query) { trackID in
-                        guard let trackID = trackID else {
-                            bpm = "Song not found"
-                            return
-                        }
-
-                        spotifyAPI.getSongBPM(trackID: trackID) { tempo in
-                            DispatchQueue.main.async {
-                                bpm = tempo != nil ? "BPM: \(Int(tempo!))" : "Failed to get BPM"
-                            }
-                        }
-                    }
-                }
-            }) {
-                Text("Search")
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-            }
-
-            Text(bpm)
-                .padding()
-                .font(.title)
-        }
-        .padding()
-    }
-}
-
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
-    }
-}
-*/
 
 import SwiftUI
 
@@ -184,7 +127,7 @@ struct ContentView: View {
                     }
                     .onDelete(perform: deleteFavorite)
                 }
-                .navigationTitle("Tailor Your Vibe")
+                .navigationTitle("Tailor Your Experience")
             }
             .padding()
             .onAppear {
